@@ -1,0 +1,29 @@
+
+
+
+delimiter //
+DROP procedure sp_sumarcompraA//
+create procedure sp_sumarcompraA(in id_plan_suscripcion int)
+begin
+set @cost=(select costo from planSuscripcion where id_plan_suscripcion=id_plan_suscripcion);
+set @sald=(select saldo from tarjeta where no_cuenta_tarjeta=3216549873216549);
+set @nue=@sald+@cost;
+update tarjeta set saldo=@nue where no_cuenta_tarjeta=3216549873216549;
+end 
+//
+delimiter ;
+
+
+DELIMITER //
+DROP TRIGGER notificacion2//
+CREATE TRIGGER notificacion2 AFTER INSERT ON suscripcion
+FOR EACH ROW
+BEGIN
+set @cost=(select costo from plansuscripcion where id_plan_suscripcion=new.id_plan_suscripcion);
+INSERT INTO
+ganancias
+Values(null,'suscripcion',new.id_plan_suscripcion,new.cedula,@cost,curdate());
+call sp_sumarcompraA(new.id_plan_suscripcion);
+END;
+//
+DELIMITER ;

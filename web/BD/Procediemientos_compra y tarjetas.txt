@@ -1,0 +1,126 @@
+insert into banco values (null, 'Banco Azteca'),
+(null, 'Santander'),
+(null, 'BBVA Bancomer'),
+(null, 'Banorte'),
+(null, 'CitiBanamex');
+
+
+insert into tarjeta values(3216549873216549,5,789, 0,'2023-12-31');
+insert into tarjeta values(1234567812345678,2,147, 1000000,'2023-12-31'),
+(8765432187654321,1,258,500,'2019-11-30'),
+(1011121314151617,3,369,7500,'2020-01-01'),
+(2021222324252627,5,888,5000,'2020-01-01'),
+(1020304050607080,3,321,0,'2025-01-01');
+
+
+insert into usuario values ('silvia52','5tic2','admin','Silvia','Murillo','Pazaran');
+insert into admin values (null,'silvia52',3216549873216549);
+
+
+
+delimiter //
+DROP procedure sp_restarcompra//
+create procedure sp_restarcompra(in dieta int, tarjeta bigint)
+begin
+set @cost=(select costo from dieta where id_dieta=dieta);
+set @sald=(select saldo from tarjeta where no_cuenta_tarjeta=tarjeta);
+set @nue=@sald-@cost;
+update tarjeta set saldo=@nue where no_cuenta_tarjeta=tarjeta;
+end 
+//
+delimiter ;
+
+delimiter //
+DROP procedure sp_sumarcompra//
+create procedure sp_sumarcompra(in dieta int, ced int)
+begin
+set @cost=(select costo from dieta where id_dieta=dieta);
+set @tar=(select no_cuenta_tarjeta from nutriologo where cedula=ced);
+set @sald=(select saldo from tarjeta where no_cuenta_tarjeta=@tar);
+set @nue=@cost*.90;
+set @nue2=@sald+@nue;
+
+update tarjeta set saldo=@nue2 where no_cuenta_tarjeta=@tar;
+end 
+//
+delimiter ;
+
+insert into gananciasNutri values(null,dieta,ced, @nue,curdate());
+
+
+delimiter //
+DROP procedure sp_sumarcompra2//
+create procedure sp_sumarcompra2(in dieta int)
+begin
+set @dietaa=(select id_dieta from dieta where id_dieta=dieta);
+set @nutri=(select cedula from dieta where id_dieta=dieta);
+set @cost=(select costo from dieta where id_dieta=dieta);
+set @sald=(select saldo from tarjeta where no_cuenta_tarjeta=3216549873216549);
+set @nue=@sald+(@cost*.10);
+insert into ganancias values (null, 'dieta', @dietaa, @nutri, @nue, curdate());
+update tarjeta set saldo=@nue where no_cuenta_tarjeta=3216549873216549;
+end 
+//
+delimiter ;
+
+
+DELIMITER //
+DROP TRIGGER notificacion//
+CREATE TRIGGER notificacion AFTER INSERT ON compradieta
+FOR EACH ROW
+BEGIN
+INSERT INTO
+notificacion(id_not ,cedula, notificacion , id_paciente, tipo, fecha, status)
+Values(null,new.cedula,'Un nuevo paciente se ha registrado con usted',new.id_paciente,'compra',curdate(),'enviada');
+call sp_restarcompra(new.id_dieta, new.no_cuenta_tarjeta);
+call sp_sumarcompra(new.id_dieta, new.cedula);
+call sp_sumarcompra2(new.id_dieta);
+END;
+//
+DELIMITER ;
+
+
+
+
+
+insert into tipoEjercicio values (null,"cardio");
+insert into tipoEjercicio values (null,"crosfit");
+insert into tipoEjercicio values (null,"Zumba");
+insert into tipoEjercicio values (null,"Yoga");
+
+insert into ejercicio values (null,"cardio nivel 0", 1, 5, 30);
+insert into ejercicio values (null,"cardio nivel 1", 1, 10, 30);
+insert into ejercicio values (null,"cardio nivel 2", 1, 15, 30);
+insert into ejercicio values (null,"cardio nivel 3", 1, 20, 30);
+insert into ejercicio values (null,"principiante", 2, 30, 30);
+insert into ejercicio values (null,"junior", 2 , 60, 30);
+insert into ejercicio values (null,"senior", 2, 90, 30);
+insert into ejercicio values (null,"master", 2, 120, 30);
+insert into ejercicio values (null,"Jazz",3, 20, 30);
+insert into ejercicio values (null,"Salsa",3, 20, 30);
+insert into ejercicio values (null,"Reggueton",3, 20, 30);
+insert into ejercicio values (null,"Yoga one",4, 30, 30);
+insert into ejercicio values (null,"Yoga two",4, 60, 30);
+insert into ejercicio values (null,"Yoga master",4, 90, 30);
+
+
+
+insert into catalimento values(null,'Carnes');
+insert into catalimento values(null,'Frutas');
+insert into catalimento values(null,'Cereales');
+
+insert into alimento values(null,1,'Pescado',300, 50);
+insert into alimento values(null,1,'Puerco',400, 150);
+insert into alimento values(null,2,'Manzana',100, 15);
+insert into alimento values(null,2,'Durazno',40, 10);
+insert into alimento values(null,3,'Trigo',100, 15);
+
+
+
+insert into movimientos values(null,1011121314151617,'12-06-19','deposito',500);
+insert into movimientos values(null,1011121314151617,'01-05-19','deposito',300);
+insert into movimientos values(null,1011121314151617,'12-12-18','deposito',200);
+
+insert into movimientos values(null,3216549873216549,'29-06-19','deposito',20);
+insert into movimientos values(null,3216549873216549,'29-06-19','deposito',45);
+
